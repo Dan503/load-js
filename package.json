@@ -1,0 +1,29 @@
+{
+	"name": "@dan503/load-js",
+	"version": "1.0.0",
+	"description": "A small function for loading one or more js files before running code. It will only ever load the file once per page load.",
+	"main": "index.js",
+	"scripts": {
+		"prepublish": "tsc",
+		"postpublish": "del-cli index.js index.d.ts",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Dan503/load-js.git"
+	},
+	"keywords": [
+		"load",
+		"js"
+	],
+	"author": "Daniel Tonon",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/Dan503/load-js/issues"
+	},
+	"homepage": "https://github.com/Dan503/load-js#readme",
+	"devDependencies": {
+		"del-cli": "^3.0.1",
+		"typescript": "^3.9.7"
+	}
+}

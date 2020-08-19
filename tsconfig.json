@@ -1,0 +1,18 @@
+{
+	"compilerOptions": {
+		"strict": true,
+		"target": "es5",
+		"module": "umd",
+		"declaration": true,
+		"lib": ["ESNext", "dom"],
+		"removeComments": false
+	},
+	"files": ["./index.ts"],
+	"include": [
+		"./core/**/*.ts",
+		"./common/**/*.ts",
+		"./types/**/*.ts",
+		"./helpers/**/*.ts"
+	],
+	"exclude": ["./node_modules", "./core/**/*.test.ts"]
+}
