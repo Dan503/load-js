@@ -14,30 +14,20 @@ const addCallback = (src: string, callback: Function): void => {
 	}
 }
 
-export default function loadJS(source: string | Array<string>, callback: () => {}): void {
-	const load = (src: string, isLastOne: boolean = true) => {
-		if (alreadyCalledSources.indexOf(src) < 0) {
-			alreadyCalledSources.push(src)
-			const script = document.createElement('script')
-			script.src = src
-			script.onload = (): any => {
-				if (isLastOne) {
-					addCallback(src, callback)
-
-					for (const key in awaitingCallbacks) {
-						awaitingCallbacks[key].forEach(cb => cb())
-					}
-				}
-			}
-			document.head.appendChild(script)
-		} else {
+export default function loadJS(src: string, callback: () => {}): void {
+	if (alreadyCalledSources.indexOf(src) < 0) {
+		alreadyCalledSources.push(src)
+		const script = document.createElement('script')
+		script.src = src
+		script.onload = (): any => {
 			addCallback(src, callback)
-		}
-	}
 
-	if (typeof source === 'string') {
-		load(source)
+			for (const key in awaitingCallbacks) {
+				awaitingCallbacks[key].forEach(cb => cb())
+			}
+		}
+		document.head.appendChild(script)
 	} else {
-		source.forEach((src, i) => load(src, i === source.length - 1))
+		addCallback(src, callback)
 	}
 }
