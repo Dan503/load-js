@@ -14,7 +14,7 @@ const addCallback = (src: string, callback: Function): void => {
 	}
 }
 
-export default function loadJS(src: string, callback: () => {}): void {
+export default function loadJS(src: string, callback: () => void): void {
 	if (alreadyCalledSources.indexOf(src) < 0) {
 		alreadyCalledSources.push(src)
 		const script = document.createElement('script')
