@@ -1,6 +1,6 @@
 {
 	"name": "@dan503/load-js",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "A small function for loading a js file before running code. It will only ever load the file once per page load even if called multiple times.",
 	"main": "index.js",
 	"scripts": {
