@@ -23,6 +23,7 @@
 	},
 	"homepage": "https://github.com/Dan503/load-js#readme",
 	"devDependencies": {
+		"cypress": "^5.4.0",
 		"del-cli": "^3.0.1",
 		"typescript": "^3.9.7"
 	},
