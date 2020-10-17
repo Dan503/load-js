@@ -6,7 +6,8 @@
 	"scripts": {
 		"prepublish": "tsc",
 		"postpublish": "del-cli index.js index.d.ts",
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"start": "npx cypress open",
+		"test": "npx cypress run"
 	},
 	"repository": {
 		"type": "git",

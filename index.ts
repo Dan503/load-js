@@ -27,6 +27,7 @@ export default function loadJS(src: string, callback: () => void): void {
 	if (alreadyCalledSources.indexOf(src) < 0) {
 		alreadyCalledSources.push(src)
 		const script = document.createElement('script')
+		script.setAttribute('class', 'load-js-script')
 		script.src = src
 		script.onload = (): any => {
 			addCallback(src, callback)
@@ -36,6 +37,7 @@ export default function loadJS(src: string, callback: () => void): void {
 			}
 		}
 		document.head.appendChild(script)
+		console.log(document.head)
 	} else {
 		addCallback(src, callback)
 	}
