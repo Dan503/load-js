@@ -4,7 +4,7 @@
 	"description": "A small function for loading a js file before running code. It will only ever load the file once per page load even if called multiple times.",
 	"main": "index.js",
 	"scripts": {
-		"prepublish": "tsc",
+		"prepublishOnly": "tsc",
 		"postpublish": "del-cli index.js index.d.ts",
 		"start": "npx cypress open",
 		"test": "npx cypress run"
