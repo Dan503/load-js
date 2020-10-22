@@ -6,9 +6,11 @@ const jsLibrarySrc = 'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/mo
 //D3 is also a large JS source file
 const altJsLibrarySrc = 'https://cdnjs.cloudflare.com/ajax/libs/d3/6.2.0/d3.js'
 
+const testHtmlFile = './cypress/fixtures/test.html'
+
 describe('load JS tests', () => {
 	it('Expect to not exist then to exist', () => {
-		cy.visit('./cypress/fixtures/test.html').then(() => {
+		cy.visit(testHtmlFile).then(() => {
 			expect(window.moment).to.not.exist
 			return new Cypress.Promise((resolve) => {
 				loadJS(jsLibrarySrc, () => {
@@ -20,7 +22,7 @@ describe('load JS tests', () => {
 	})
 
 	it('Expect to only create a single script element per JS source', () => {
-		cy.visit('./cypress/fixtures/test.html').then(() => {
+		cy.visit(testHtmlFile).then(() => {
 			return Cypress.Promise.all([
 				new Cypress.Promise((resolve) => {
 					loadJS(jsLibrarySrc, () => {
@@ -49,7 +51,7 @@ describe('load JS tests', () => {
 
 	it('Expect to run all callbacks', () => {
 		let calls = 0;
-		cy.visit('./cypress/fixtures/test.html').then(() => {
+		cy.visit(testHtmlFile).then(() => {
 			return Cypress.Promise.all([
 				new Cypress.Promise((resolve) => {
 					loadJS(jsLibrarySrc, () => {
@@ -78,7 +80,7 @@ describe('load JS tests', () => {
 
 	it('Expect to run callback immediately if the script has already been loaded', () => {
 		let calls = 0;
-		cy.visit('./cypress/fixtures/test.html').then(() => {
+		cy.visit(testHtmlFile).then(() => {
 			return Cypress.Promise.all([
 				new Cypress.Promise((resolve) => {
 					loadJS(jsLibrarySrc, () => {
