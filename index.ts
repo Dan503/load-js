@@ -42,10 +42,13 @@ export default function loadJS(src: string, callback: () => void): void {
 			if (updatedScript) {
 				updatedScript.hasLoaded = true
 			}
-			for (const thisSource in allScripts) {
-				const thisScript = allScripts[thisSource] || defaultScript
-				thisScript.callbacks.forEach(cb => cb())
-			}
+			// setTimeout ensures the script has finished running before attempting to run the callbacks
+			setTimeout(() => {
+				for (const thisSource in allScripts) {
+					const thisScript = allScripts[thisSource] || defaultScript
+					thisScript.callbacks.forEach(cb => cb())
+				}
+			})
 		}
 		document.head.appendChild($scriptElem)
 	} else {
