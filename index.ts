@@ -30,6 +30,7 @@ const waitForAllScriptsToBeReady = (onReady: () => void) => {
 		const allHaveLoaded = scriptSources.every(src => allScripts[src]?.hasLoaded)
 		if (allHaveLoaded) {
 			clearInterval(interval)
+			console.log({ allScripts }, (window as any).moment, (window as any).d3)
 			onReady()
 		} else if (maxTimeReached) {
 			clearInterval(interval)
@@ -68,15 +69,17 @@ export default function loadJS(src: string, callback: () => void): void {
 		alreadyCalledScripts.push(src)
 		const $scriptElem = document.createElement('script')
 		$scriptElem.setAttribute('class', 'load-js-script')
-		$scriptElem.src = src
-		$scriptElem.onload = (): void => {
-			addCallback(src, callback)
-			const updatedScript = allScripts[src]
-			if (updatedScript) {
-				updatedScript.hasLoaded = true
-			}
-		}
 		document.head.appendChild($scriptElem)
+		$scriptElem.onload = (): void => {
+			setTimeout(() => {
+				addCallback(src, callback)
+				const updatedScript = allScripts[src]
+				if (updatedScript) {
+					updatedScript.hasLoaded = true
+				}
+			}, 10)
+		}
+		$scriptElem.src = src
 	} else {
 		addCallback(src, callback)
 	}
