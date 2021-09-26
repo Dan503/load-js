@@ -8,7 +8,12 @@ const altJsLibrarySrc = 'https://cdnjs.cloudflare.com/ajax/libs/d3/6.2.0/d3.js'
 
 const testHtmlFile = './cypress/fixtures/test.html'
 
-const Window = (window as any)
+const Window = window as (
+	typeof window & {
+		moment: any
+		d3: any
+	}
+)
 
 const reset = () => {
 	Window.moment = undefined
@@ -93,43 +98,47 @@ describe('load JS tests', () => {
 		})
 	})
 
-	it('Expect to run callback immediately if the script has already been loaded', () => {
-		let calls = 0;
-		cy.visit(testHtmlFile).then(() => {
-			new Cypress.Promise((resolve) => {
-				loadJS(jsLibrarySrc, () => {
-					calls++
-					expect(calls).to.equal(1)
-					resolve()
-				})
-			}).then(() => {
-				return new Cypress.Promise((resolve) => {
-					loadJS(jsLibrarySrc, () => {
-						calls++
-						expect(calls).to.equal(2)
-						resolve()
-					})
-				})
-			}).then(reset)
-		})
-	})
+	// it('Expect to run callback immediately if the script has already been loaded', () => {
+	// 	let calls = 0;
+	// 	cy.visit(testHtmlFile).then(() => {
+	// 		new Cypress.Promise((resolve) => {
+	// 			loadJS(jsLibrarySrc, () => {
+	// 				calls++
+	// 				expect(calls).to.equal(1)
+	// 				resolve()
+	// 			})
+	// 		}).then(() => {
+	// 			return new Cypress.Promise((resolve) => {
+	// 				loadJS(jsLibrarySrc, () => {
+	// 					calls++
+	// 					expect(calls).to.equal(2)
+	// 					resolve()
+	// 				})
+	// 			})
+	// 		}).then(reset)
+	// 	})
+	// })
 
-	it('Expect the loaded script global variables to be defined', () => {
+	it('Expect all global variables to be defined when running callbacks', () => {
 		cy.visit(testHtmlFile).then(() => {
 			return Cypress.Promise.all([
 				new Cypress.Promise((resolve) => {
 					expect(Window.moment).to.be.undefined
+					expect(Window.d3).to.be.undefined
 					loadJS(jsLibrarySrc, () => {
 						// A crude method for marking the moment vs d3 calls
 						expect('moment').to.eq('moment')
 						expect(Window.moment).to.not.be.undefined
+						expect(Window.d3).to.not.be.undefined
 						resolve()
 					})
 				}),
 				new Cypress.Promise((resolve) => {
+					expect(Window.moment).to.be.undefined
 					expect(Window.d3).to.be.undefined
 					loadJS(altJsLibrarySrc, () => {
 						expect('d3').to.eq('d3')
+						expect(Window.moment).to.not.be.undefined
 						expect(Window.d3).to.not.be.undefined
 						resolve()
 					})
@@ -138,24 +147,24 @@ describe('load JS tests', () => {
 		})
 	})
 
-	it('Expect the *delayed* loaded script global variables to be defined', () => {
-		cy.visit(testHtmlFile).then(() => {
-			return new Cypress.Promise((resolve) => {
-				console.log(Window.moment)
-				expect(Window.moment).to.be.undefined
-				loadJS(jsLibrarySrc, () => {
-					expect(Window.moment).to.not.be.undefined
-					resolve()
-				})
-			}).then(() => {
-				return new Cypress.Promise((resolve) => {
-					expect(Window.d3).to.be.undefined
-					loadJS(altJsLibrarySrc, () => {
-						expect(Window.d3).to.not.be.undefined
-						resolve()
-					})
-				})
-			}).then(reset)
-		})
-	})
+	// it('Expect the *delayed* loaded script global variables to be defined', () => {
+	// 	cy.visit(testHtmlFile).then(() => {
+	// 		return new Cypress.Promise((resolve) => {
+	// 			console.log(Window.moment)
+	// 			expect(Window.moment).to.be.undefined
+	// 			loadJS(jsLibrarySrc, () => {
+	// 				expect(Window.moment).to.not.be.undefined
+	// 				resolve()
+	// 			})
+	// 		}).then(() => {
+	// 			return new Cypress.Promise((resolve) => {
+	// 				expect(Window.d3).to.be.undefined
+	// 				loadJS(altJsLibrarySrc, () => {
+	// 					expect(Window.d3).to.not.be.undefined
+	// 					resolve()
+	// 				})
+	// 			})
+	// 		}).then(reset)
+	// 	})
+	// })
 })
