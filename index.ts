@@ -12,20 +12,53 @@ const alreadyCalledScripts: Array<string> = []
 const allScripts: AllScripts = {}
 const defaultScript: Script = { hasLoaded: false, callbacks: [] }
 
+let callbackTimeout: NodeJS.Timeout
+
+const runCallbacks = () => {
+	const keys = Object.keys(allScripts)
+	keys.forEach(source => {
+		const thisScript = allScripts[source] || defaultScript
+		thisScript.callbacks.forEach(cb => cb())
+	})
+}
+
+const waitForAllScriptsToBeReady = (onReady: () => void) => {
+	let maxTimeReached = false
+
+	const interval = setInterval(() => {
+		const scriptSources = Object.keys(allScripts)
+		const allHaveLoaded = scriptSources.every(src => allScripts[src]?.hasLoaded)
+		if (allHaveLoaded) {
+			clearInterval(interval)
+			onReady()
+		} else if (maxTimeReached) {
+			clearInterval(interval)
+			throw new Error('Timed out fetching scripts')
+		}
+	}, 10)
+
+	setTimeout(() => {
+		maxTimeReached = true
+	}, 5000)
+}
+
 const addCallback = (src: string, callback: Function): void => {
 	const script = allScripts[src]
 	if (!script) return
 
-	if (script.hasLoaded) {
-		// If the script has already been previously loaded, just run the callback immediately
-		callback()
-	} else {
+	clearTimeout(callbackTimeout)
+
+	if (!script.hasLoaded) {
 		if (script.callbacks.length > 0) {
 			script.callbacks.push(callback)
 		} else {
 			script.callbacks = [callback]
 		}
 	}
+
+	callbackTimeout = setTimeout(() => {
+		waitForAllScriptsToBeReady(runCallbacks)
+	}, 10)
 }
 
 export default function loadJS(src: string, callback: () => void): void {
@@ -42,13 +75,6 @@ export default function loadJS(src: string, callback: () => void): void {
 			if (updatedScript) {
 				updatedScript.hasLoaded = true
 			}
-			// setTimeout ensures the script has finished running before attempting to run the callbacks
-			setTimeout(() => {
-				for (const thisSource in allScripts) {
-					const thisScript = allScripts[thisSource] || defaultScript
-					thisScript.callbacks.forEach(cb => cb())
-				}
-			})
 		}
 		document.head.appendChild($scriptElem)
 	} else {
