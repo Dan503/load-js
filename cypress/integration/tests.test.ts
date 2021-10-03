@@ -15,26 +15,59 @@ const Window = window as (
 	}
 )
 
-const reset = () => {
+const reset = (contentWindow: Cypress.AUTWindow) => {
 	Window.moment = undefined
 	Window.d3 = undefined
+	contentWindow.document.querySelectorAll('script').forEach(scriptElem => scriptElem.remove())
 }
 
 describe('load JS tests', () => {
+
+	it('Expect all global variables to be defined when running callbacks', () => {
+		cy.visit(testHtmlFile).then((contentWindow) => {
+			return Cypress.Promise.all([
+				new Cypress.Promise((resolve) => {
+					expect('moment not loaded').to.eq('moment not loaded')
+					expect(Window.moment).to.be.undefined
+					expect(Window.d3).to.be.undefined
+					loadJS(jsLibrarySrc, () => {
+						// A crude method for marking the moment vs d3 calls
+						expect('moment loaded').to.eq('moment loaded')
+						expect(Window.moment).to.not.be.undefined
+						expect(Window.d3).to.not.be.undefined
+						resolve()
+					})
+				}),
+				new Cypress.Promise((resolve) => {
+					expect('d3 not loaded').to.eq('d3 not loaded')
+					expect(Window.moment).to.be.undefined
+					expect(Window.d3).to.be.undefined
+					loadJS(altJsLibrarySrc, () => {
+						expect('d3 loaded').to.eq('d3 loaded')
+						expect(Window.moment).to.not.be.undefined
+						expect(Window.d3).to.not.be.undefined
+						resolve()
+					})
+				})
+			]).finally(() => reset(contentWindow))
+		})
+	})
+
+
 	it('Expect to not exist then to exist', () => {
-		cy.visit(testHtmlFile).then(() => {
+		cy.visit(testHtmlFile).then((contentWindow) => {
 			expect(Window.moment).to.not.exist
 			return new Cypress.Promise((resolve) => {
 				loadJS(jsLibrarySrc, () => {
 					expect(Window.moment).to.exist
 					resolve()
 				})
-			}).then(reset)
+			}).finally(() => reset(contentWindow))
 		})
 	})
 
 	it('Expect to only create a single script element per JS source', () => {
-		cy.visit(testHtmlFile).then(() => {
+		cy.visit(testHtmlFile).then((contentWindow) => {
 			return Cypress.Promise.all([
 				new Cypress.Promise((resolve) => {
 					loadJS(jsLibrarySrc, () => {
@@ -53,7 +86,7 @@ describe('load JS tests', () => {
 				new Cypress.Promise((resolve) => {
 					loadJS(altJsLibrarySrc, () => {
 						const $script = document.querySelectorAll(`script.load-js-script[src="${altJsLibrarySrc}"]`)
-						expect($script.length).to.equal(1)
+						expect($script.length).to.equal(2)
 						resolve()
 					})
 				}),
@@ -64,13 +97,13 @@ describe('load JS tests', () => {
 						resolve()
 					})
 				}),
-			]).then(reset)
+			]).finally(() => reset(contentWindow))
 		})
 	})
 
 	it('Expect to run all callbacks', () => {
 		let calls = 0;
-		cy.visit(testHtmlFile).then(() => {
+		cy.visit(testHtmlFile).then((contentWindow) => {
 			return Cypress.Promise.all([
 				new Cypress.Promise((resolve) => {
 					loadJS(jsLibrarySrc, () => {
@@ -94,7 +127,7 @@ describe('load JS tests', () => {
 					})
 				}),
 			])
-				.then(reset)
+				.finally(() => reset(contentWindow))
 		})
 	})
 
@@ -118,34 +151,6 @@ describe('load JS tests', () => {
 	// 		}).then(reset)
 	// 	})
 	// })
-
-	it('Expect all global variables to be defined when running callbacks', () => {
-		cy.visit(testHtmlFile).then(() => {
-			return Cypress.Promise.all([
-				new Cypress.Promise((resolve) => {
-					expect(Window.moment).to.be.undefined
-					expect(Window.d3).to.be.undefined
-					loadJS(jsLibrarySrc, () => {
-						// A crude method for marking the moment vs d3 calls
-						expect('moment').to.eq('moment')
-						expect(Window.moment).to.not.be.undefined
-						expect(Window.d3).to.not.be.undefined
-						resolve()
-					})
-				}),
-				new Cypress.Promise((resolve) => {
-					expect(Window.moment).to.be.undefined
-					expect(Window.d3).to.be.undefined
-					loadJS(altJsLibrarySrc, () => {
-						expect('d3').to.eq('d3')
-						expect(Window.moment).to.not.be.undefined
-						expect(Window.d3).to.not.be.undefined
-						resolve()
-					})
-				})
-			]).then(reset)
-		})
-	})
 
 	// it('Expect the *delayed* loaded script global variables to be defined', () => {
 	// 	cy.visit(testHtmlFile).then(() => {
