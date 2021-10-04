@@ -7,7 +7,12 @@
 		"prepublishOnly": "tsc",
 		"postpublish": "del-cli index.js index.d.ts",
 		"start": "npx cypress open",
-		"test": "npx cypress run"
+		"test": "npm-run-all --parallel test1 test2 test3 test4 test5",
+		"test1": "npx cypress run --spec cypress/integration/allCallbacksAreRun.test.ts",
+		"test2": "npx cypress run --spec cypress/integration/delayedAllundefinedToDefinedTest.test.ts",
+		"test3": "npx cypress run --spec cypress/integration/expectUndefinedThenDefined.test.ts",
+		"test4": "npx cypress run --spec cypress/integration/immediateCallbackIfAlreadyLoaded.test.ts",
+		"test5": "npx cypress run --spec cypress/integration/oneScriptElemPerSource.test.ts"
 	},
 	"repository": {
 		"type": "git",
@@ -26,7 +31,7 @@
 	"devDependencies": {
 		"cypress": "^5.4.0",
 		"del-cli": "^3.0.1",
+		"npm-run-all": "^4.1.5",
 		"typescript": "^3.9.7"
-	},
-	"dependencies": {}
+	}
 }
