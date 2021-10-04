@@ -4,83 +4,94 @@ interface AllScripts {
 
 interface Script {
 	hasLoaded: boolean
-	callbacks: Array<Function>
-}
-
-const alreadyCalledScripts: Array<string> = []
-
-const allScripts: AllScripts = {}
-const defaultScript: Script = { hasLoaded: false, callbacks: [] }
-
-let callbackTimeout: NodeJS.Timeout
-
-const runCallbacks = () => {
-	const keys = Object.keys(allScripts)
-	keys.forEach(source => {
-		const thisScript = allScripts[source] || defaultScript
-		thisScript.callbacks.forEach(cb => cb())
-	})
-}
-
-const waitForAllScriptsToBeReady = (onReady: () => void) => {
-	let maxTimeReached = false
-
-	const interval = setInterval(() => {
-		const scriptSources = Object.keys(allScripts)
-		const allHaveLoaded = scriptSources.every(src => allScripts[src]?.hasLoaded)
-		if (allHaveLoaded) {
-			clearInterval(interval)
-			console.log({ allScripts }, (window as any).moment, (window as any).d3)
-			onReady()
-		} else if (maxTimeReached) {
-			clearInterval(interval)
-			throw new Error('Timed out fetching scripts')
-		}
-	}, 10)
-
-	setTimeout(() => {
-		maxTimeReached = true
-	}, 5000)
-}
-
-const addCallback = (src: string, callback: Function): void => {
-	const script = allScripts[src]
-	if (!script) return
-
-	clearTimeout(callbackTimeout)
-
-	if (!script.hasLoaded) {
-		if (script.callbacks.length > 0) {
-			script.callbacks.push(callback)
-		} else {
-			script.callbacks = [callback]
+	isLoading: boolean
+	source: string
+	callbacks: {
+		[callbackID: string]: {
+			hasBeenCalled: boolean
+			cb: Function
+			id: string
 		}
 	}
+}
 
-	callbackTimeout = setTimeout(() => {
-		waitForAllScriptsToBeReady(runCallbacks)
-	}, 10)
+const allScripts: AllScripts = {}
+const defaultScript = (source: string): Script => ({ source, hasLoaded: false, isLoading: false, callbacks: {} })
+
+const generateID = (): string => {
+	const randomNumber = Math.random()
+	return `id-${randomNumber}`.replace('.', '')
+}
+
+const createScriptElem = (src: string, onLoad: () => void) => {
+	const $scriptElem = document.createElement('script')
+	$scriptElem.setAttribute('class', 'load-js-script')
+	document.head.appendChild($scriptElem)
+	$scriptElem.onload = onLoad
+	$scriptElem.src = src
 }
 
 export default function loadJS(src: string, callback: () => void): void {
-	const script = allScripts[src] || defaultScript
-	allScripts[src] = script
-	if (alreadyCalledScripts.indexOf(src) < 0) {
-		alreadyCalledScripts.push(src)
-		const $scriptElem = document.createElement('script')
-		$scriptElem.setAttribute('class', 'load-js-script')
-		document.head.appendChild($scriptElem)
-		$scriptElem.onload = (): void => {
-			setTimeout(() => {
-				addCallback(src, callback)
-				const updatedScript = allScripts[src]
-				if (updatedScript) {
-					updatedScript.hasLoaded = true
-				}
-			}, 10)
+	const script = allScripts[src] || defaultScript(src)
+	const { callbacks, hasLoaded, isLoading } = script
+
+	const allCallBackIds = Object.keys(callbacks)
+	const callbackID = allCallBackIds.find(cbId => callbacks[cbId].cb === callback)
+
+	if (hasLoaded && !isLoading) {
+		if (callbackID) {
+			const { cb, hasBeenCalled } = callbacks[callbackID]
+			if (!hasBeenCalled) {
+				cb()
+				callbacks[callbackID].hasBeenCalled = true
+			}
+		} else {
+			const newCallbackID = generateID()
+			callback()
+			callbacks[newCallbackID] = {
+				cb: callback,
+				hasBeenCalled: true,
+				id: newCallbackID
+			}
 		}
-		$scriptElem.src = src
-	} else {
-		addCallback(src, callback)
 	}
+
+	if (!hasLoaded && isLoading) {
+		if (!callbackID) {
+			const cbId = generateID()
+			callbacks[cbId] = {
+				cb: callback,
+				hasBeenCalled: false,
+				id: cbId,
+			}
+			allScripts[src] = script
+		}
+	}
+
+	if (!hasLoaded && !isLoading) {
+		script.isLoading = true
+
+		createScriptElem(src, () => {
+			script.isLoading = false
+			script.hasLoaded = true
+			script.source = src
+
+			if (!callbackID) {
+				const cbId = generateID()
+				callbacks[cbId] = {
+					cb: callback,
+					hasBeenCalled: true,
+					id: cbId,
+				}
+				allScripts[src] = script
+			}
+
+			const allCbIds = Object.keys(callbacks)
+			allCbIds.forEach(cbId => {
+				callbacks[cbId].cb()
+			})
+		})
+	}
+
+	allScripts[src] = script
 }
