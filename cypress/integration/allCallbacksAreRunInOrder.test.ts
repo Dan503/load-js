@@ -1,7 +1,7 @@
 import loadJS from '../../index'
 import { MomentJsLibrarySrc, testHtmlFile } from "../support/commonStuff";
 
-it('Expect to run all callbacks', () => {
+it('Expect to run all callbacks in order', () => {
 	let calls = 0;
 	cy.visit(testHtmlFile).then(() => {
 		return Cypress.Promise.all([

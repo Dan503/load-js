@@ -6,17 +6,19 @@ interface Script {
 	hasLoaded: boolean
 	isLoading: boolean
 	source: string
+	lastOrdinal: number
 	callbacks: {
 		[callbackID: string]: {
 			hasBeenCalled: boolean
 			cb: Function
-			id: string
+			id: string,
+			ordinal: number
 		}
 	}
 }
 
 const allScripts: AllScripts = {}
-const defaultScript = (source: string): Script => ({ source, hasLoaded: false, isLoading: false, callbacks: {} })
+const defaultScript = (source: string): Script => ({ source, hasLoaded: false, isLoading: false, callbacks: {}, lastOrdinal: 0 })
 
 const generateID = (): string => {
 	const randomNumber = Math.random()
@@ -33,7 +35,7 @@ const createScriptElem = (src: string, onLoad: () => void) => {
 
 export default function loadJS(src: string, callback: () => void): void {
 	const script = allScripts[src] || defaultScript(src)
-	const { callbacks, hasLoaded, isLoading } = script
+	const { callbacks, hasLoaded, isLoading, lastOrdinal } = script
 
 	const allCallBackIds = Object.keys(callbacks)
 	const callbackID = allCallBackIds.find(cbId => callbacks[cbId].cb === callback)
@@ -47,23 +49,29 @@ export default function loadJS(src: string, callback: () => void): void {
 			}
 		} else {
 			const newCallbackID = generateID()
+			const newOrdinal = lastOrdinal + 1
 			callback()
 			callbacks[newCallbackID] = {
 				cb: callback,
 				hasBeenCalled: true,
-				id: newCallbackID
+				id: newCallbackID,
+				ordinal: newOrdinal,
 			}
+			script.lastOrdinal = newOrdinal
 		}
 	}
 
 	if (!hasLoaded && isLoading) {
 		if (!callbackID) {
 			const cbId = generateID()
+			const newOrdinal = lastOrdinal + 1
 			callbacks[cbId] = {
 				cb: callback,
 				hasBeenCalled: false,
 				id: cbId,
+				ordinal: newOrdinal,
 			}
+			script.lastOrdinal = newOrdinal
 			allScripts[src] = script
 		}
 	}
@@ -82,11 +90,20 @@ export default function loadJS(src: string, callback: () => void): void {
 					cb: callback,
 					hasBeenCalled: true,
 					id: cbId,
+					ordinal: 0,
 				}
 				allScripts[src] = script
 			}
 
-			const allCbIds = Object.keys(callbacks)
+			const allCbIds = Object.keys(callbacks).sort((a, b): 1 | 0 | -1 => {
+				if (callbacks[a].ordinal < callbacks[b].ordinal) {
+					return -1
+				}
+				if (callbacks[a].ordinal > callbacks[b].ordinal) {
+					return 1
+				}
+				return 0
+			})
 			allCbIds.forEach(cbId => {
 				callbacks[cbId].cb()
 			})
