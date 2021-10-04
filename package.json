@@ -7,12 +7,13 @@
 		"prepublishOnly": "tsc",
 		"postpublish": "del-cli index.js index.d.ts",
 		"start": "npx cypress open",
-		"test": "npm-run-all --parallel test1 test2 test3 test4 test5",
+		"test": "npm-run-all --parallel test1 test2 test3 test4 test5 test6",
 		"test1": "npx cypress run --spec cypress/integration/allCallbacksAreRunInOrder.test.ts",
 		"test2": "npx cypress run --spec cypress/integration/delayedAllundefinedToDefinedTest.test.ts",
 		"test3": "npx cypress run --spec cypress/integration/expectUndefinedThenDefined.test.ts",
 		"test4": "npx cypress run --spec cypress/integration/immediateCallbackIfAlreadyLoaded.test.ts",
-		"test5": "npx cypress run --spec cypress/integration/oneScriptElemPerSource.test.ts"
+		"test5": "npx cypress run --spec cypress/integration/loopTest.test.ts",
+		"test6": "npx cypress run --spec cypress/integration/oneScriptElemPerSource.test.ts"
 	},
 	"repository": {
 		"type": "git",
