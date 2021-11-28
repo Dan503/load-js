@@ -38,7 +38,7 @@ export default function loadJS(src: string, callback: () => void): void {
 	const { callbacks, hasLoaded, isLoading, lastOrdinal } = script
 
 	const allCallBackIds = Object.keys(callbacks)
-	const callbackID = allCallBackIds.find(cbId => callbacks[cbId].cb === callback)
+	const callbackID = allCallBackIds.filter(cbId => callbacks[cbId].cb === callback)[0]
 
 	if (hasLoaded && !isLoading) {
 		if (callbackID) {
